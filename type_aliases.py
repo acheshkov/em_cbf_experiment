@@ -5,6 +5,7 @@ from typing import List, Tuple, Dict, Optional, Any
 Path = str
 ProjectName = str
 ModelName = str
+SourceCode = str
 Vector = List[float]
 Dataset = pd.DataFrame
 InferenceResults = pd.DataFrame
