@@ -8,10 +8,9 @@ This repository contains source code to compare the following LM/EM algorithms:
 
 We compare algorithms using LM/EM benchmark dataset "Synthetic Dataset" [ref].
 
-# How to run
+# Prelimenaries
 
-
-A comparison pipeline to start needs the information described below. This information is passed to the pipeline using `Config` object.
+To start a comparison pipeline, we need to provide the information described below. This information is stores in a `config.ini` file (see Config sections). Before start a pipeline script reads the `config.ini` file. 
 
 ### Synthetic dataset location
 
@@ -43,7 +42,7 @@ Each row in this table provides vector representation (`vector_str` column) for 
 
 ### SEMI recommendations
 
-* Path to CSV file with precalculated SEMI recommendations. If omitted will be calculated from scratch. 
+* Path to CSV file with precalculated SEMI recommendations. If file does not exist the it will be calculated from scratch and written on the disk to current folder. 
 
 Each row in this table stores EM recommendations (`semi_recommendations` column). Recommendations stores in a list of line ranges and corresponding scores. The higher score the higher recommendation's rank. The column `filename` links this table with Synthetic Dataset.
 
