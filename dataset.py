@@ -5,7 +5,7 @@ from typing import Tuple
 from type_aliases import Path
 from type_aliases import RangesDataset, EmosVectorsDataset, SynthDataset
 from sklearn.model_selection import train_test_split
-from source_code_utils import get_source_code, complement_range
+from source_code_utils import get_source_code, complement_range, complement_range_file
 
 
 def get_emos_ranges(path_to_csv: Path) -> RangesDataset:
@@ -34,7 +34,19 @@ def get_emos_vectors(path_to_csv: Path) -> EmosVectorsDataset:
     return emos_vectors
 
 
-def get_synth_dataset(path_to_dataset_csv: Path, path_to_java_files: Path, n=None) -> SynthDataset:
+def _figure_out_true_inline_range(row: pd.core.series.Series) -> str:
+    sc = get_source_code(row['output_filename'])
+    start = int(row['insertion_start']) - 1
+    end = int(row['insertion_end']) - 1
+    if end < start: return None
+    range = complement_range_file(
+        row['output_filename'], 
+        start,
+        end,
+    )
+    return str(range)
+
+def get_synth_dataset(path_to_dataset_csv: Path, path_to_java_files: Path, n: int=None) -> SynthDataset:
     ''' Load and prepare Synthetic Dataset'''
     columns = [
         'output_filename', 
@@ -45,17 +57,6 @@ def get_synth_dataset(path_to_dataset_csv: Path, path_to_java_files: Path, n=Non
         'project_id',
         'target_method_start_line'
     ]
-    def _figure_out_true_inline_range(row) -> str:
-      sc = get_source_code(row['output_filename'])
-      start = int(row['insertion_start']) - 1
-      end = int(row['insertion_end']) - 1
-      if end < start: return None
-      range = inline_complement(
-          row['output_filename'], 
-          start,
-          end,
-      )
-      return str(range)
     
     df = pd.read_csv(path_to_dataset_csv).drop_duplicates(['output_filename'], keep=False)[columns]
     if n is not None:
@@ -69,11 +70,11 @@ def get_synth_dataset(path_to_dataset_csv: Path, path_to_java_files: Path, n=Non
 
 
 
-def get_dataset(config: Config, n=None) -> pd.DataFrame:
+def get_dataset(config: Config, n: int=None) -> pd.DataFrame:
     '''Load, preprocess and combine all input data parts together to form a single dataset'''
-    synth = get_synth_dataset(config.path_to_dataset, config.path_to_java_files, n)
+    synth = get_synth_dataset(config.path_to_dataset_csv, config.path_to_java_files, n)
     print("Synth dataset:", len(synth))
-    emos_ranges = get_emos_ranges(config.path_to_range)
+    emos_ranges = get_emos_ranges(config.path_to_ranges_csv)
     print("Ranges dataset:", len(emos_ranges))
     emos_vectors = get_emos_vectors(config.path_to_emos_vectors)
     print("EMOS vectors dataset:", len(emos_vectors))
@@ -81,7 +82,7 @@ def get_dataset(config: Config, n=None) -> pd.DataFrame:
     print("Final dataset:", len(ds))
     return ds
 
-def split_dataset(df: pd.DataFrame, random_state=None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def split_dataset(df: pd.DataFrame, random_state:int=None) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''Split a dataset with stratification by project name'''
     train, test = train_test_split(
         df,  
