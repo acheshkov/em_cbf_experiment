@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import pandas as pd
 from inference_results import InferenceResults
 
@@ -6,12 +7,10 @@ from inference_results import InferenceResults
 class CBFModel:
     pass
 
-
-
 def train_cbf_model_per_project(dataset: pd.DataFrame) -> CBFModel:
     pass
 
-def train_cbf_model_global(dataset: pd.DataFrame) -> CBFModel:
+def train_cbf_model_single(dataset: pd.DataFrame) -> CBFModel:
     pass
 
 def inference_cbf(model: CBFModel, data: pd.DataFrame) -> InferenceResults:
