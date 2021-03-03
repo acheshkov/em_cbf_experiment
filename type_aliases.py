@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List, Tuple, Dict, Optional, Any
+from typing import List
 
 
 Path = str
