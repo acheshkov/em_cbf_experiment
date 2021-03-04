@@ -1,7 +1,7 @@
 import unittest
-import tempfile
 import pandas as pd
-from dataset import split_dataset, get_synth_dataset
+from dataset import split_dataset
+from dataset import _drop_duplicates_by_filename, _drop_rows_with_undefined_true_range, _mk_full_path_to_java_files
 
 
 class TestDataset(unittest.TestCase):
@@ -24,23 +24,23 @@ class TestDataset(unittest.TestCase):
     def test_get_emos_vectors(self):
         pass
 
-    def test_get_synth_dataset(self):
-        path_to_java_files = '/tmp/some_folder'
-        columns = [
-            'output_filename',
-            'insertion_start',
-            'insertion_end',
-            'class_name',
-            'target_method',
-            'project_id',
-            'target_method_start_line'
-        ]
-        with tempfile.NamedTemporaryFile(mode='w+') as temp_csv:
-            temp_csv.write(','.join(columns) + '\n')
-            temp_csv.write('fn_1,2,10,class,method,project,2\n')
-            temp_csv.write('fn_1,2,10,class,method,project,2\n')
-            temp_csv.write('fn_2,2,10,class,method,project,2\n')
-            temp_csv.seek(0)
-            synth = get_synth_dataset(temp_csv.name, path_to_java_files)
-            print(synth[['filename', 'true_inline_range']].values)
-            self.assertEqual(len(synth), 1)  # we remove duplicates by 'output_filename' column
+    def test_drop_duplicates_by_filename(self):
+        df = pd.DataFrame({'output_filename': ['fn_1', 'fn_2', 'fn_2', 'fn_3']})
+        df = _drop_duplicates_by_filename(df)
+        self.assertEqual(len(df), 2)
+        self.assertEqual(set(df.output_filename.values), set(df.output_filename.unique()))
+
+    def test_drop_rows_with_undefined_true_range(self):
+        df = pd.DataFrame({'true_inline_range': [None, '[3, 4]']})
+        df = _drop_rows_with_undefined_true_range(df)
+        self.assertEqual(len(df), 1)
+        self.assertIn('[3, 4]', df.true_inline_range.values)
+        self.assertNotIn(None, df.true_inline_range.values)
+
+    def test_mk_full_path_to_java_files(self):
+        df = pd.DataFrame({'output_filename': ['fn_1', 'fn_2']})
+        df = _mk_full_path_to_java_files(df, '/path/to/dir')
+        self.assertEqual(len(df), 2)
+        for fn in df.output_filename.values:
+            self.assertIn('/path/to/dir', fn)
+            self.assertNotIn('/path/to/other_dir', fn)
