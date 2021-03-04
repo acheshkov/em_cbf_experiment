@@ -1,7 +1,6 @@
 import unittest
-import tempfile
 import pandas as pd
-from dataset import split_dataset, get_synth_dataset
+from dataset import split_dataset
 
 
 class TestDataset(unittest.TestCase):
@@ -25,4 +24,4 @@ class TestDataset(unittest.TestCase):
         pass
 
     def test_get_synth_dataset(self):
-       pass
+        pass
