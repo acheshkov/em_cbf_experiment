@@ -37,9 +37,9 @@ def get_emos_vectors(path_to_csv: Path) -> EmosVectorsDataset:
 
 
 def _figure_out_true_inline_range(row: pd.core.series.Series) -> str:
-    # sc = get_source_code(row['output_filename'])
     start = int(row['insertion_start']) - 1
     end = int(row['insertion_end']) - 1
+    return None
     if end < start:
         return None
     range = complement_range_file(
