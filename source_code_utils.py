@@ -16,5 +16,4 @@ def complement_range(class_source: SourceCode, line_range: Range) -> Range:
 
 
 def complement_range_file(filename: Path, inline_start: int, inline_end: int) -> Range:
-    sc = get_source_code(filename)
-    return complement_range(sc, Range(inline_start, inline_end))
+    pass
