@@ -1,10 +1,9 @@
 import unittest
 import pandas as pd
+from dataset import split_dataset  # get_emos_ranges, get_emos_vectors, get_synth_dataset
 
-from dataset import split_dataset, get_emos_ranges, get_emos_vectors, get_synth_dataset
 
 class TestDataset(unittest.TestCase):
-
 
     def test_split_dataset(self):
         df = pd.DataFrame(
@@ -17,7 +16,6 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(len(df.query("project == 'B'")), 4)
         self.assertEqual(len(test.query("project == 'A'")), 25)
         self.assertEqual(len(test.query("project == 'B'")), 1)
-        
 
     def test_get_emos_ranges(self):
         pass
@@ -27,4 +25,3 @@ class TestDataset(unittest.TestCase):
 
     def test_get_synth_dataset(self):
         pass
-
