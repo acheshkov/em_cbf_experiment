@@ -10,8 +10,8 @@ from eval_results import eval_recommender
 from random_guess import RandomGuessModel, inference_random_guess
 
 
-def pipeline(config: Config, n=None) -> Dict[ModelName, EvalResults]:
-    dataset = get_dataset(config, n)
+def pipeline(config: Config) -> Dict[ModelName, EvalResults]:
+    dataset = get_dataset(config)
     train, test = split_dataset(dataset, random_state=42)
 
     model_per_project = train_cbf_model_per_project(train)

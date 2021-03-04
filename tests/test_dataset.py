@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from dataset import split_dataset  # get_emos_ranges, get_emos_vectors, get_synth_dataset
+from dataset import split_dataset
 
 
 class TestDataset(unittest.TestCase):
