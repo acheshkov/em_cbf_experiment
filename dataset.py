@@ -39,6 +39,7 @@ def get_emos_vectors(path_to_csv: Path) -> EmosVectorsDataset:
 def _figure_out_true_inline_range(row: pd.core.series.Series) -> str:
     start = int(row['insertion_start']) - 1
     end = int(row['insertion_end']) - 1
+    return None
     if end < start:
         return None
     range = complement_range_file(
@@ -47,6 +48,24 @@ def _figure_out_true_inline_range(row: pd.core.series.Series) -> str:
         end,
     )
     return str(range)
+
+
+def _drop_duplicates_by_filename(df: pd.DataFrame) -> pd.DataFrame:
+    ''' To drop rows if there are duplication by filename '''
+    return df.copy().drop_duplicates(['output_filename'], keep=False)
+
+
+def _drop_rows_with_undefined_true_range(df: pd.DataFrame) -> pd.DataFrame:
+    ''' To drop rows where True EMO is undefined'''
+    return df.copy().dropna(subset=['true_inline_range'])
+
+
+def _mk_full_path_to_java_files(df: pd.DataFrame, path_to_java_files: str) -> pd.DataFrame:
+    df = df.copy()
+    df.output_filename = df.output_filename.apply(
+        lambda v: f'{path_to_java_files}/{v}'
+    )
+    return df
 
 
 def get_synth_dataset(path_to_dataset_csv: Path, path_to_java_files: Path) -> SynthDataset:
@@ -61,11 +80,12 @@ def get_synth_dataset(path_to_dataset_csv: Path, path_to_java_files: Path) -> Sy
         'target_method_start_line'
     ]
 
-    df = pd.read_csv(path_to_dataset_csv).drop_duplicates(['output_filename'], keep=False)[columns]
+    df = pd.read_csv(path_to_dataset_csv, usecols=columns)
+    df = _drop_duplicates_by_filename(df)
     df['filename'] = df.output_filename.apply(os.path.basename)
-    df['output_filename'] = df.output_filename.apply(lambda v: f'{path_to_java_files}/{v}')
+    df = _mk_full_path_to_java_files(df, path_to_java_files)
     df['true_inline_range'] = df.apply(lambda row: _figure_out_true_inline_range(row), axis=1)
-    df.dropna(subset=['true_inline_range'], inplace=True)  # drop rows where True EMO is undefined
+    df = _drop_rows_with_undefined_true_range(df)
     return df
 
 
