@@ -32,11 +32,11 @@ Synthetic dataset CSV has the following columns. More details here [ref].
 
 Each row in this table provides vector representation (`vector_str` column) for EMO (`range` column). The `vector_str` column stores vector as a space-separated string of its components. The column `filename` is a link to column `output_filename` of Synthetic Dataset.
 
-| filename |  range   | vector_str     |
-|:---------|:---------|:---------------|
-| file_1   | [40, 45] | -0.1 0.3 -0.9  |
-| file_1   | [40, 47] | -0.3 0.1 0.8   |
-| file_2   | [10, 15] | -0.1 0.3 -0.9  |
+| filename | vector_str     |
+|:---------|:---------------|
+| file_1   | -0.1 0.3 -0.9  |
+| file_1   | -0.3 0.1 0.8   |
+| file_2   | -0.1 0.3 -0.9  |
 
 
 

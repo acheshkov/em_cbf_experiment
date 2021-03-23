@@ -1,6 +1,7 @@
 import unittest
 import pandas as pd
-from dataset import split_dataset
+import tempfile
+from dataset import split_dataset, get_emos_vectors
 from dataset import _drop_duplicates_by_filename, _drop_rows_with_undefined_true_range, _mk_full_path_to_java_files
 
 
@@ -18,11 +19,21 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(len(test.query("project == 'A'")), 25)
         self.assertEqual(len(test.query("project == 'B'")), 1)
 
-    def test_get_emos_ranges(self):
-        pass
+    # def test_get_emos_ranges(self):
+    #     pass
 
     def test_get_emos_vectors(self):
-        pass
+        with tempfile.NamedTemporaryFile(mode='w+') as temp_csv:
+            temp_csv.write(','.join(['/path/to/p1_p2_p3_p4_p5_3_8.java', '-0.1 0.3 -0.9']))
+            temp_csv.write(','.join(['/path/to/p1_p2_p3_p4_p5_3_8.java', '-0.1 0.3 -0.9']))
+            temp_csv.write(','.join(['/path/to/p1_p2_p3_p4_p5_5_7.java', '-0.3 -0.3 0.2']))
+            temp_csv.seek(0)
+            emos_vectors = get_emos_vectors(temp_csv.name)
+            self.assertIn('vector_str', emos_vectors.columns)
+            self.assertEqual(len(emos_vectors), 1)
+            self.assertEqual(emos_vectors.range[0], '[5, 7]')
+            self.assertEqual(emos_vectors.filename_origin[0], 'p1_p2_p3_p4.java')
+            self.assertEqual(emos_vectors.emo_uid[0], 'p1_p2_p3_p4_p5_5_7.java')
 
     def test_drop_duplicates_by_filename(self):
         df = pd.DataFrame({'output_filename': ['fn_1', 'fn_2', 'fn_2', 'fn_3']})
