@@ -8,7 +8,6 @@ from dataset import _drop_duplicates_by_filename, _drop_rows_with_undefined_true
 
 class TestDataset(unittest.TestCase):
 
-
     def _mock_synth_dataset(self) -> SynthDataset:
         columns = [
             'output_filename',
@@ -53,7 +52,6 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(len(test.query("project == 'A'")), 25)
         self.assertEqual(len(test.query("project == 'B'")), 1)
 
-
     def test_get_emos_vectors(self):
         with tempfile.NamedTemporaryFile(mode='w+') as temp_csv:
             temp_csv.write(','.join(['/path/to/p1_p2_p3_p4_p5_3_8.java', '-0.1 0.3 -0.9']))
@@ -72,9 +70,9 @@ class TestDataset(unittest.TestCase):
         emos_vectors: EmosVectorsDataset = self._mock_emos_vectors_dataset()
         synth: SynthDataset = self._mock_synth_dataset()
         dataset = combine_all_together(emos_vectors, synth)
-    
+
         columns = [
-            'filename', 'emo_uid', 'vector', 'project', 'is_true_emo', 'range_len', 
+            'filename', 'emo_uid', 'vector', 'project', 'is_true_emo', 'range_len',
             'target_method', 'target_method_start_line', 'range', 'true_range'
         ]
         for col_name in columns:
@@ -84,7 +82,6 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(len(dataset.query('filename == "/path/to/file_1.java" and is_true_emo == True')), 1)
         self.assertEqual(dataset.query('filename == "/path/to/file_1.java" and is_true_emo == True').true_range[0], '[40, 60]')
         self.assertEqual(len(dataset.query('filename == "/path/to/file_2.java" and is_true_emo == True')), 0)
-        
 
     def test_drop_duplicates_by_filename(self):
         df = pd.DataFrame({'output_filename': ['fn_1', 'fn_2', 'fn_2', 'fn_3']})
