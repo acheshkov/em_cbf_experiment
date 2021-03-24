@@ -91,14 +91,14 @@ def combine_all_together(emos: EmosVectorsDataset, synth: SynthDataset) -> Datas
     data = []
 
     for fn, true_range, fn_full, method, target_method_start_line, project, vector_str, rrange, emo_uid in join:
+        is_true_range = true_range == rrange
         rrange = eval(rrange)
-        is_true_range = (eval(true_range) == rrange)
         data.append((
             fn_full, emo_uid, vector_str, project,
             is_true_range,
             rrange[1] - rrange[0],
             method, target_method_start_line,
-            str(rrange), str(true_range)
+            str(rrange), true_range
         ))
 
     columns = [
