@@ -2,20 +2,11 @@
 import pandas as pd
 import os
 from config import Config
-from typing import Tuple
+from typing import Tuple, Optional
 from type_aliases import Path
-from type_aliases import RangesDataset, EmosVectorsDataset, SynthDataset, Dataset
+from type_aliases import EmosVectorsDataset, SynthDataset, Dataset
 from sklearn.model_selection import train_test_split
 from source_code_utils import complement_range_file
-
-
-def get_emos_ranges(path_to_csv: Path) -> RangesDataset:
-    ''' Load and prepare dataset with calculated possible EMO ranges '''
-    emos_ranges = pd \
-        .read_csv(path_to_csv, header=None, names=['filename', 'class_name', 'method_name', 'ranges']) \
-        .drop_duplicates(['filename'], keep=False)
-    emos_ranges.filename = emos_ranges.filename.apply(os.path.basename)
-    return emos_ranges
 
 
 def get_emos_vectors(path_to_csv: Path) -> EmosVectorsDataset:
@@ -23,7 +14,7 @@ def get_emos_vectors(path_to_csv: Path) -> EmosVectorsDataset:
     def _mk_link_to_original_sample(filename) -> str:
         return '_'.join(filename.split('_')[0: 4]) + '.java'
 
-    def _ex_range(filename) -> str:
+    def _extract_range(filename) -> str:
         out = list(map(int, filename.replace('.java', '').split('_')[-2:]))
         return str(out)
 
@@ -32,11 +23,12 @@ def get_emos_vectors(path_to_csv: Path) -> EmosVectorsDataset:
         .drop_duplicates(['emo_uid'], keep=False)
     emos_vectors.emo_uid = emos_vectors.emo_uid.apply(os.path.basename)
     emos_vectors['filename_origin'] = emos_vectors.emo_uid.apply(_mk_link_to_original_sample)
-    emos_vectors['range'] = emos_vectors.emo_uid.apply(_ex_range)
+    emos_vectors['range'] = emos_vectors.emo_uid.apply(_extract_range)
     return emos_vectors
 
 
-def _figure_out_true_inline_range(row: pd.core.series.Series) -> str:
+def _figure_out_true_inline_range(row: pd.core.series.Series) -> Optional[str]:
+    '''Figure out and returns True range as a string'''
     start = int(row['insertion_start']) - 1
     end = int(row['insertion_end']) - 1
     return None
@@ -90,18 +82,40 @@ def get_synth_dataset(path_to_dataset_csv: Path, path_to_java_files: Path) -> Sy
 
 
 def combine_all_together(emos: EmosVectorsDataset, synth: SynthDataset) -> Dataset:
-    pass
+    columns = [
+        'filename', 'true_inline_range',
+        'output_filename', 'target_method', 'target_method_start_line',
+        'project_id', 'vector_str', 'range', 'emo_uid'
+    ]
+    join = synth.merge(emos, 'inner', left_on='filename', right_on='filename_origin')[columns].values
+    data = []
+
+    for fn, true_range, fn_full, method, target_method_start_line, project, vector_str, rrange, emo_uid in join:
+        is_true_range = true_range == rrange
+        rrange = eval(rrange)
+        data.append((
+            fn_full, emo_uid, vector_str, project,
+            is_true_range,
+            rrange[1] - rrange[0],
+            method, target_method_start_line,
+            str(rrange), true_range
+        ))
+
+    columns = [
+        'filename', 'emo_uid', 'vector', 'project', 'is_true_emo', 'range_len',
+        'target_method', 'target_method_start_line', 'range', 'true_range'
+    ]
+    df = pd.DataFrame(data, columns=columns)
+    return df
 
 
 def get_dataset(config: Config) -> pd.DataFrame:
     '''Load, preprocess and combine all input data parts together to form a single dataset'''
     synth = get_synth_dataset(config.path_to_dataset_csv, config.path_to_java_files)
     print("Synth dataset:", len(synth))
-    emos_ranges = get_emos_ranges(config.path_to_ranges_csv)
-    print("Ranges dataset:", len(emos_ranges))
     emos_vectors = get_emos_vectors(config.path_to_emos_vectors)
     print("EMOS vectors dataset:", len(emos_vectors))
-    ds = combine_all_together(emos_ranges, emos_vectors, synth)
+    ds = combine_all_together(emos_vectors, synth)
     print("Final dataset:", len(ds))
     return ds
 
