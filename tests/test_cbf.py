@@ -51,7 +51,7 @@ class TestCBFModel(unittest.TestCase):
         recommendation = model.recommend([], 'not_exisiting_project')
         self.assertIsNone(recommendation)
 
-    def test_recommend(self):
+    def test_recommend_order(self):
         model = self._mk_model()
         model.train()
         recommendation = model.recommend([], 'project_1')
@@ -74,15 +74,3 @@ class TestCBFModel(unittest.TestCase):
             'project_1'
         )
         self.assertListEqual(recommendation._true_pos_idxs, [1])
-
-        recommendation = model.recommend(
-            [([0, 1], False, Range(0), Range(0)), ([1, 0], True, Range(0), Range(0))],
-            'project_2'
-        )
-        self.assertListEqual(recommendation._true_pos_idxs, [1])
-
-        recommendation = model.recommend(
-            [([0, 1], True, Range(0), Range(0)), ([1, 0], False, Range(0), Range(0))],
-            'project_2'
-        )
-        self.assertListEqual(recommendation._true_pos_idxs, [2])
