@@ -1,5 +1,6 @@
 import unittest
 import pandas as pd
+import numpy as np
 import tempfile
 from dataset import split_dataset, get_emos_vectors, combine_all_together
 from dataset import SynthDataset, EmosVectorsDataset
@@ -77,6 +78,8 @@ class TestDataset(unittest.TestCase):
         ]
         for col_name in columns:
             self.assertIn(col_name, dataset.columns)
+
+        self.assertEqual(dataset.dtypes.target_method_start_line, np.int32)
         self.assertIsInstance(dataset, pd.DataFrame)
         self.assertEqual(len(dataset), 4)
         self.assertEqual(len(dataset.query('filename == "/path/to/file_1.java" and is_true_emo == True')), 1)

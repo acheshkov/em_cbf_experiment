@@ -106,6 +106,7 @@ def combine_all_together(emos: EmosVectorsDataset, synth: SynthDataset) -> Datas
         'target_method', 'target_method_start_line', 'range', 'true_range'
     ]
     df = pd.DataFrame(data, columns=columns)
+    df = df.astype({'target_method_start_line': 'int32'})
     return df
 
 

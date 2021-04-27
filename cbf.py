@@ -37,12 +37,54 @@ class CBFModel:
 
 
 def train_cbf_model_per_project(dataset: pd.DataFrame) -> CBFModel:
-    pass
+    only_true_emos = dataset[dataset.is_true_emo]
+    model = CBFModel()
+    for project, vector_str in only_true_emos[['project', 'vector']].values:
+        vector = vector_str_to_list(vector_str)
+        model.add(project, vector)
+    model.train()
+    return model
 
 
 def train_cbf_model_single(dataset: pd.DataFrame) -> CBFModel:
-    pass
+    only_true_emos = dataset[dataset.is_true_emo]
+    model = CBFModel()
+    for project, vector_str in only_true_emos[['project', 'vector']].values:
+        vector = vector_str_to_list(vector_str)
+        model.add('*', vector)
+    model.train()
+    return model
+
+
+def vector_str_to_list(vector: str) -> Vector:
+    return list(map(float, vector.split(' ')))
+
+
+def _inference(g: pd.DataFrame, project: ProjectName, predictions: InferenceResults, model: CBFModel) -> None:
+    xs = g[['vector', 'is_true_emo', 'range', 'true_range']].values
+    xs = [(vector_str_to_list(v), b, Range.from_str(r), Range.from_str(tr)) for (v, b, r, tr) in xs]
+    mb_recommendation: Optional[RankedList] = model.recommend(xs, project)
+    if mb_recommendation is None:
+        return
+    predictions.add(project, mb_recommendation)
 
 
 def inference_cbf(model: CBFModel, data: pd.DataFrame) -> InferenceResults:
-    pass
+    '''Group by project and filename then apply model to each group'''
+
+    columns = ['project', 'filename', 'vector', 'is_true_emo']
+    for col in columns:
+        assert col in data.columns
+
+    def _f(g: pd.DataFrame, predictions: InferenceResults):
+        g.groupby('filename').apply(lambda h: _inference(h, g.name, predictions, model))
+
+    predictions = InferenceResults()
+    data.groupby('project').apply(lambda g: _f(g, predictions))
+    return predictions
+
+
+def inference_cbf_single(model: CBFModel, data: pd.DataFrame) -> InferenceResults:
+    data = data.copy()
+    data['project'] = '*'
+    return inference_cbf(model, data)
