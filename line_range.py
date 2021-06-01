@@ -3,7 +3,7 @@
 
 
 class Range:
-    ''' Line range from a to b includes a and b and start from zero'''
+    '''Range of lines in file from a to b (including a and b). a, b >=0'''
     def __init__(self, start: int, end: int = None):
         self._start = start
         self._end = end or start

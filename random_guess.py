@@ -16,5 +16,18 @@ class RandomGuessModel:
         ))
 
 
+def _inference(g: pd.DataFrame, predictions: InferenceResults, model: RandomGuessModel) -> None:
+    xs = g[['is_true_emo', 'range', 'true_range']].values.tolist()
+    xs = [(b, r, tr) for (b, r, tr) in xs]
+    recommendation = model.recommend(xs)
+    predictions.add('*', recommendation)
+
+
 def inference_random_guess(model: RandomGuessModel, data: pd.DataFrame) -> InferenceResults:
-    pass
+    columns = ['filename', 'is_true_emo']
+    for col in columns:
+        assert col in data.columns
+
+    predictions = InferenceResults()
+    data.groupby('filename').apply(lambda g: _inference(g, predictions, model))
+    return predictions
