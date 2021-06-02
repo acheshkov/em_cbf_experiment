@@ -4,11 +4,82 @@ import os
 import subprocess
 import tempfile
 from inference_results import InferenceResults
-from prepare_data_for_semi_eval import prepare_semi_data
 from config import Config
 from dataset import get_synth_dataset
 from ranked_list import RankedList
-from semi_utils import semi_recommendation_str_to_list
+import re
+from typing import List, Tuple, Any
+import javalang
+from source_code_utils import get_source_code, extract_method
+
+
+FileName = str
+MethodName = str
+MethodStartLine = int
+Range = Tuple[int, int]
+Score = float
+
+
+def dims_to_str(dims: List[Any]) -> str:
+    if len(dims) == 0:
+        return ''
+    return ''.join(['[]' for _ in dims])
+
+
+def types_to_str(args: List[Any]) -> str:
+    if args is None:
+        return ''
+
+    def _to_str(arg):
+        return arg.pattern_type if arg.type is None else arg.type.name
+    return '<' + ','.join([_to_str(arg) for arg in args]) + '>'
+
+
+def formal_to_str(p: javalang.tree.FormalParameter) -> str:
+    s = p.type.name
+    if hasattr(p.type, "arguments"):
+        s += types_to_str(p.type.arguments)
+
+    s += dims_to_str(p.type.dimensions)
+    return s
+
+
+def meth_dec_to_str(decl: javalang.tree.MethodDeclaration) -> str:
+    return decl.name + '(' + ','.join([formal_to_str(p) for p in decl.parameters]) + ')'
+
+
+def get_method_name(filename: str, method_name: str, method_start_line: int) -> str:
+    source_code = get_source_code(filename)
+    # source_code = remove_str_literals_with_brackets(source_code)
+    method_code = extract_method(source_code, method_name, method_start_line)
+    tokens = javalang.tokenizer.tokenize(method_code)
+    parser = javalang.parser.Parser(tokens)
+    method_decl = parser.parse_member_declaration()
+    return meth_dec_to_str(method_decl)
+
+
+def prepare_semi_data(df: List[Tuple[FileName, MethodName, MethodStartLine]], dir: str) -> pd.DataFrame:
+    data = []
+    errors = 0
+    for fn, method_name, pos in df:
+        fn_full = os.path.join(dir, fn)
+        try:
+            semi_method_name = get_method_name(fn_full, method_name, pos)
+            data.append((fn_full, semi_method_name, pos))
+        except Exception:
+            print(fn_full, method_name, pos)
+            errors += 1
+            continue
+    return pd.DataFrame(data), errors
+
+
+def semi_recommendation_str_to_list(s: str) -> List[Tuple[Range, Score]]:
+    s = s.replace(' to ', ',')
+    s = re.sub(r"0(\d)(\d)", '\\1\\2', s)
+    s = re.sub(r"0(\d)", '\\1', s)
+    ls = eval(s)
+    ls = sorted(ls, key=lambda v: v[2], reverse=True)
+    return list(map(lambda v: (v[0: 2], v[2]), ls))
 
 
 def run_semi_algorithm(df: pd.DataFrame, config: Config) -> pd.DataFrame:

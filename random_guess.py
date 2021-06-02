@@ -3,7 +3,7 @@ from inference_results import InferenceResults
 from ranked_list import RankedList
 import random
 from typing import Tuple, List
-from utils import Range
+from source_code_utils import Range
 
 
 class RandomGuessModel:

@@ -1,4 +1,5 @@
 from type_aliases import SourceCode, Path
+from typing import List
 from line_range import Range
 import re
 
@@ -57,3 +58,19 @@ def complement_range(class_source: SourceCode, line_range: Range) -> Range:
 def complement_range_file(filename: Path, inline_start: int, inline_end: int) -> Range:
     sc = get_source_code(filename)
     return complement_range(sc, Range(inline_start, inline_end))
+
+
+def extract_lines_range_from_source_code(code: SourceCode, range: Range) -> List[str]:
+    ''' Line Range from a to b includes a and b and start indexing from zero'''
+    return code.split('\n')[range.start: range.end + 1]
+
+
+def extract_method(class_source: SourceCode, method_name: str, method_start_line: int) -> SourceCode:
+    assert method_name in class_source.split('\n')[method_start_line - 1] or \
+         method_name in class_source.split('\n')[method_start_line]
+    if '{' in class_source.split('\n')[method_start_line - 1]:
+        range = complement_range(class_source, Range(method_start_line - 1))
+    else:
+        range = complement_range(class_source, Range(method_start_line - 1, method_start_line + 1))
+    method_lines = extract_lines_range_from_source_code(class_source, range)
+    return '\n'.join(method_lines)
